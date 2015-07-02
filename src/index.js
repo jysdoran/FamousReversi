@@ -4,63 +4,75 @@
 var DOMElement = require('famous/dom-renderables/DOMElement');
 var FamousEngine = require('famous/core/FamousEngine');
 var Transitionable = require('famous/transitions/Transitionable');
-var Mesh = require('famous/webgl-renderables/Mesh');
+//var Mesh = require('famous/webgl-renderables/Mesh');
 var Color = require('famous/utilities/Color');
-var PointLight = require('famous/webgl-renderables/lights/PointLight');
-var Material = require('famous/webgl-materials/Material');
-var Camera = require('famous/components/Camera');
+//var PointLight = require('famous/webgl-renderables/lights/PointLight');
+//var Material = require('famous/webgl-materials/Material');
+//var Camera = require('famous/components/Camera');
 
 // Boilerplate code to make your life easier
 FamousEngine.init();
 
 // Initialize with a scene; then, add a 'node' to the scene root
-var logo = FamousEngine.createScene().addChild();
+var scene = FamousEngine.createScene();
+var board = [[]];
+generateBoard(8);
 
-// Create an [image] DOM element providing the logo 'node' with the 'src' path
-var image = new DOMElement(logo, { tagName: 'img' })
-image.setAttribute('src', './images/famous_logo.png');
-image.state = 0;
-
-// Chainable API
-logo
-    // Set size mode to 'absolute' to use absolute pixel values: (width 250px, height 250px)
-    .setSizeMode('absolute', 'absolute', 'absolute')
-    .setAbsoluteSize(250, 250)
-    // Center the 'node' to the parent (the screen, in this instance)
-    .setAlign(0.5, 0.5)
-    // Set the translational origin to the center of the 'node'
-    .setMountPoint(0.5, 0.5)
-    // Set the rotational origin to the center of the 'node'
-    .setOrigin(0.5, 0.5);
-
-// Add a spinner component to the logo 'node' that is called, every frame
+//Global 'tweak' variables
 var period = 4000;
-var rotationpos = new Transitionable(0);
-var currentRotation;
-var lastRotation = 0;
+var size = 30;
 
-var spinner = logo.addComponent({
-    onUpdate: function(time) {
-    	currentRotation = rotationpos.get();
-    	console.log(currentRotation%3.14);
-        if(Math.floor(time) % period < 20){
-            rotationpos.set(0);
-            rotationpos.set(6.28, {duration: period, curve: 'linear'});
-        } else if (lastRotation % 3.14 < 1.57 && currentRotation % 3.14 > 1.57){
-        	console.log('flip!');
-        	if (image.state == 0){
-            	image.setAttribute('src', './images/famous_logo_i.png');
-            	image.state = 1;
-        	} else {
-        		image.setAttribute('src', './images/famous_logo.png');
-        		image.state = 0;
-        	}
-        }
-        lastRotation = currentRotation
-        logo.setRotation(0,currentRotation, 0);
-        logo.requestUpdateOnNextTick(spinner);
+function Counter(x, y, state) {
+  this.node = scene.addChild();
+  this.id = this.node.addComponent(this);
+  this.rotationpos = new Transitionable(0);
+  this.lastRotation = 0;
+  this.currentRotation = 0;
+  this.state = state;
+  this.image = new DOMElement(this.node, { tagName: 'img' });
+  this.toggle();
+  this.toggle();
+
+  this.node.setSizeMode('absolute', 'absolute', 'absolute').setAbsoluteSize(size, size, size).setPosition(x, y).setMountPoint(0, 0, 0).setOrigin(0.5, 0.5, 0.5);
+
+  this.node.requestUpdate(this.id);
+};
+
+Counter.prototype.onUpdate = function onUpdate(time) {
+  this.currentRotation = this.rotationpos.get();
+  if (Math.floor(time) % period < 20) {
+    this.rotationpos.set(0);
+    this.rotationpos.set(6.28, { duration: period, curve: 'linear' });
+  } else if (this.lastRotation % 3.14 < 1.57 && this.currentRotation % 3.14 > 1.57) {
+    this.toggle();
+  }
+  this.lastRotation = this.currentRotation;
+  this.node.setRotation(0, this.rotationpos.get(), 0);
+  this.node.requestUpdateOnNextTick(this.id);
+};
+
+Counter.prototype.toggle = function () {
+  if (this.state == 'black') {
+    this.image.setAttribute('src', './images/famous_logo_i.png');
+    this.state = 'white';
+  } else {
+    this.image.setAttribute('src', './images/famous_logo.png');
+    this.state = 'black';
+  }
+};
+
+function generateBoard(dim) {
+  board = [[]];
+  for (var i = 0; i < 8; i++) {
+    board[i] = [];
+    for (var j = 0; j < 8; j++) {
+      board[i][j] = null;
     }
-});
-
-// Let the magic begin...
-logo.requestUpdate(spinner);
+  }
+}
+/*
+board[3][3] = new Counter(board[3][3].x, board[3][3].y, 'black');
+board[3][4] = new Counter(board[3][3].x, board[3][3].y, 'white');
+board[4][4] = new Counter(board[3][3].x, board[3][3].y, 'black');
+board[4][3] = new Counter(board[3][3].x, board[3][3].y, 'black');
+*/
