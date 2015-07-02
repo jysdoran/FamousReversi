@@ -36,13 +36,19 @@ logo
 // Add a spinner component to the logo 'node' that is called, every frame
 var period = 4000;
 var rotationpos = new Transitionable(0);
+var currentRotation;
+var lastRotation = 0;
 
 var spinner = logo.addComponent({
     onUpdate: function(time) {
+    	currentRotation = rotationpos.get();
+    	console.log(currentRotation%3.14);
         if(Math.floor(time) % period < 20){
             rotationpos.set(0);
             rotationpos.set(6.28, {duration: period, curve: 'linear'});
-            if (image.state == 0){
+        } else if (lastRotation % 3.14 < 1.57 && currentRotation % 3.14 > 1.57){
+        	console.log('flip!');
+        	if (image.state == 0){
             	image.setAttribute('src', './images/famous_logo_i.png');
             	image.state = 1;
         	} else {
@@ -50,7 +56,8 @@ var spinner = logo.addComponent({
         		image.state = 0;
         	}
         }
-        logo.setRotation(0,rotationpos.get(), 0);
+        lastRotation = currentRotation
+        logo.setRotation(0,currentRotation, 0);
         logo.requestUpdateOnNextTick(spinner);
     }
 });
