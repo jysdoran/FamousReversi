@@ -15,15 +15,19 @@ FamousEngine.init();
 
 // Initialize with a scene; then, add a 'node' to the scene root
 var scene = FamousEngine.createScene();
+var boardNode = scene.addChild();
 
 //Global 'tweak' variables
 var period = 4000;
 var size = 30;
 var buffer = 4;
-boardPosition = 200;
+var boardPosition = 200;
+var boardSize = 8;
 
+
+var currentPlayer = 'black';
 var board = [[]];
-generateBoard(8);
+generateBoard(boardSize);
 
 function Counter(x, y, state) {
 	this.node = scene.addChild();
@@ -36,7 +40,11 @@ function Counter(x, y, state) {
 	this.toggle();
 	this.toggle();
 
-	this.node.setSizeMode('absolute', 'absolute', 'absolute').setAbsoluteSize(size, size, size).setPosition(x, y).setMountPoint(0, 0, 0).setOrigin(0.5, 0.5, 0.5);
+	this.node.setSizeMode('absolute', 'absolute', 'absolute')
+		.setAbsoluteSize(size, size, size)
+		.setPosition(x, y)
+		.setMountPoint(0.5, 0.5, 0.5)
+		.setOrigin(0.5, 0.5, 0.5);
 
 	this.node.requestUpdate(this.id);
 };
@@ -55,6 +63,10 @@ Counter.prototype.onUpdate = function onUpdate(time) {
 	this.node.requestUpdateOnNextTick(this.id);
 };
 
+/*Counter.prototype.flip = function () {
+
+}*/
+
 Counter.prototype.toggle = function () {
 	if (this.state == 'black') {
     	this.image.setAttribute('src', './images/famous_logo_i.png');
@@ -65,22 +77,49 @@ Counter.prototype.toggle = function () {
 	}
 };
 
-function Tile(x,y) {
-	this.x = x;
-	this.y = y;
+function Tile(i,j) {
+	this.node = scene.addChild();
+	this.domElement = new DOMElement(this.node);
+	this.domElement.setAttribute('style','background-color:#CCCCCC; opacity: 0.1;');
+	this.x = boardPosition + (size + 2 * buffer) * i;
+	this.y = boardPosition + (size + 2 * buffer) * j;
+	this.i = i;
+	this.j = j;
+
+	this.node.setSizeMode('absolute', 'absolute', 'absolute')
+		.setAbsoluteSize(size + buffer, size + buffer, size + buffer)
+		.setPosition(this.x, this.y)
+		.setMountPoint(0.5, 0.5, 0.5)
+		.setOrigin(0.5, 0.5, 0.5)
+
+	this.node.i = i;
+	this.node.j = j;
+
+	this.node.addUIEvent('click');
+	this.domElement.on('click', placeCounter);
 }
+
+function placeCounter (e) {
+	var i = e.node.i;
+	var j = e.node.j
+	board[i][j] = new Counter(board[i][j].x, board[i][j].y, currentPlayer);
+};
+
 
 function generateBoard(dim) {
 	board = [[]];
 	for (var i = 0; i < dim; i++) {
     	board[i] = [];
 	    for (var j = 0; j < dim; j++) {
-    		board[i][j] = new Tile(boardPosition + (size + buffer) * i, boardPosition + (size + buffer) * j);
+    		board[i][j] = new Tile(i, j);
     	}
 	}
 }
 
+
+/*
 board[3][3] = new Counter(board[3][3].x, board[3][3].y, 'black');
 board[3][4] = new Counter(board[3][4].x, board[3][4].y, 'white');
 board[4][4] = new Counter(board[4][4].x, board[4][4].y, 'black');
 board[4][3] = new Counter(board[4][3].x, board[4][3].y, 'white');
+*/
