@@ -23,6 +23,7 @@ var size = 40;
 var buffer = 4;
 var boardPosition = 200;
 var boardSize = 8;
+var easingcurve = 'outBounce'
 
 
 var currentPlayer = 'black';
@@ -60,8 +61,7 @@ Counter.prototype.onUpdate = function onUpdate(time) {
 
 	if (this.lastXRotation % 3.14 < 1.57 && this.currentXRotation % 3.14 > 1.57) {
 		this.toggle();
-	}
-	if (this.lastYRotation % 3.14 < 1.57 && this.currentYRotation % 3.14 > 1.57) {
+	} else if (this.lastYRotation % 3.14 < 1.57 && this.currentYRotation % 3.14 > 1.57) {
 		this.toggle();
 	}
 	
@@ -73,9 +73,9 @@ Counter.prototype.onUpdate = function onUpdate(time) {
 
 Counter.prototype.flip = function (axis) {
 	if (axis == 'x') {
-		this.xrotationpos.set(this.currentXRotation + 3.14, { duration: period, curve: 'linear' });
+		this.xrotationpos.set(this.currentXRotation + 3.14, { duration: period, curve: easingcurve });
 	} else if (axis == 'y'){
-		this.yrotationpos.set(this.currentYRotation + 3.14, { duration: period, curve: 'linear' });
+		this.yrotationpos.set(this.currentYRotation + 3.14, { duration: period, curve: easingcurve });
 	} else {
 		console.log('Invalid Axis');
 	}
@@ -200,14 +200,14 @@ function placeCounter (e) {
 			} else {
 				a = boardSize;
 				flip[5] = true;
-			}
+			} 
 		} else {
 			a = boardSize;
 		}
 	}
 
 	for (var a = j - 1; a >= 0; a--) {
-		if (i + (j - a) >= 0 && board[i + (j - a)][a].state != 'tile') {
+		if (i + (j - a) < boardSize && board[i + (j - a)][a].state != 'tile') {
 			if (board[i + (j - a)][a].state != currentPlayer) {
 				check[6].push(board[i + (j - a)][a]);
 			} else {
@@ -235,7 +235,11 @@ function placeCounter (e) {
 	for (var a = 0; a < 8; a++) {
 		if (flip[a] == true) {
 			for (var g = 0; g < check[a].length; g++) {
-				check[a][g].flip('x');
+				//if(a - 2 < 0) {
+					check[a][g].flip('x');
+				//} else {
+				//	check[a][g].flip('y');
+				//}
 			}
 		}
 	}
