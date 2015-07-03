@@ -32,9 +32,14 @@ generateBoard(boardSize);
 function Counter(x, y, state) {
 	this.node = scene.addChild();
 	this.id = this.node.addComponent(this);
-	this.rotationpos = new Transitionable(0);
-	this.lastRotation = 0;
-	this.currentRotation = 0;
+	
+	this.xrotationpos = new Transitionable(0);
+	this.lastXRotation = 0;
+	this.currentXRotation = 0;
+	this.yrotationpos = new Transitionable(0);
+	this.lastYRotation = 0;
+	this.currentYRotation = 0;
+
 	this.state = state;
 	this.image = new DOMElement(this.node, { tagName: 'img' });
 	this.toggle();
@@ -47,25 +52,39 @@ function Counter(x, y, state) {
 		.setOrigin(0.5, 0.5, 0.5);
 
 	this.node.requestUpdate(this.id);
+
 };
 
 Counter.prototype.onUpdate = function onUpdate(time) {
-	this.currentRotation = this.rotationpos.get();
+	this.currentXRotation = this.xrotationpos.get();
+	this.currentYRotation = this.yrotationpos.get();
 	if (Math.floor(time) % period < 20) {
-    	this.rotationpos.set(0);
-    	this.rotationpos.set(6.28, { duration: period, curve: 'linear' });
-	} else if (this.lastRotation % 3.14 < 1.57 && this.currentRotation % 3.14 > 1.57) {
+    	this.flip('y');
+    }
+
+
+	if (this.lastXRotation % 3.14 < 1.57 && this.currentXRotation % 3.14 > 1.57) {
+		this.toggle();
+	}
+	if (this.lastYRotation % 3.14 < 1.57 && this.currentYRotation % 3.14 > 1.57) {
 		this.toggle();
 	}
 	
-	this.lastRotation = this.currentRotation;
-	this.node.setRotation(0, this.rotationpos.get(), 0);
+	this.lastXRotation = this.currentXRotation;
+	this.lastYRotation = this.currentYRotation;
+	this.node.setRotation(this.yrotationpos.get(), this.xrotationpos.get(), 0);
 	this.node.requestUpdateOnNextTick(this.id);
 };
 
-/*Counter.prototype.flip = function () {
-
-}*/
+Counter.prototype.flip = function (axis) {
+	if (axis == 'x') {
+		this.xrotationpos.set(this.currentXRotation + 3.14, { duration: period, curve: 'linear' });
+	} else if (axis == 'y'){
+		this.yrotationpos.set(this.currentYRotation + 3.14, { duration: period, curve: 'linear' });
+	} else {
+		console.log('Invalid Axis');
+	}
+}
 
 Counter.prototype.toggle = function () {
 	if (this.state == 'black') {
@@ -101,8 +120,13 @@ function Tile(i,j) {
 
 function placeCounter (e) {
 	var i = e.node.i;
-	var j = e.node.j
+	var j = e.node.j;
 	board[i][j] = new Counter(board[i][j].x, board[i][j].y, currentPlayer);
+	if (currentPlayer == 'black') {
+    	currentPlayer = 'white';
+    } else {
+    	currentPlayer = 'black';
+    }
 };
 
 
