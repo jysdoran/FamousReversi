@@ -27,7 +27,6 @@ var boardSize = 8;
 
 var currentPlayer = 'black';
 var board = [[]];
-generateBoard(boardSize);
 
 function Counter(x, y, state) {
 	this.node = scene.addChild();
@@ -120,12 +119,11 @@ function placeCounter (e) {
 	var i = e.node.i;
 	var j = e.node.j;
 	board[i][j] = new Counter(board[i][j].x, board[i][j].y, currentPlayer);
-	console.log(i);
 
 	var check = [[]];
 	var flip = []
 
-	for (var a = 0; a < 4; a++) {
+	for (var a = 0; a < 8; a++) {
 		check[a] = [];
 		flip[a] = false;
 	}
@@ -182,7 +180,59 @@ function placeCounter (e) {
 		}
 	}
 
-	for (var a = 0; a < 4; a++) {
+	for (var a = i - 1; a >= 0; a--) {
+		if (j - (i - a) >= 0 && board[a][j - (i - a)].state != 'tile') {
+			if (board[a][j - (i - a)].state != currentPlayer) {
+				check[4].push(board[a][j - (i - a)]);
+			} else {
+				a = -1;
+				flip[4] = true;
+			}
+		} else {
+			a = -1;
+		}
+	}
+
+	for (var a = i + 1; a < boardSize; a++) {
+		if (j - (i - a) < boardSize && board[a][j - (i - a)].state != 'tile') {
+			if (board[a][j - (i - a)].state != currentPlayer) {
+				check[5].push(board[a][j - (i - a)]);
+			} else {
+				a = boardSize;
+				flip[5] = true;
+			}
+		} else {
+			a = boardSize;
+		}
+	}
+
+	for (var a = j - 1; a >= 0; a--) {
+		if (i + (j - a) >= 0 && board[i + (j - a)][a].state != 'tile') {
+			if (board[i + (j - a)][a].state != currentPlayer) {
+				check[6].push(board[i + (j - a)][a]);
+			} else {
+				a = -1;
+				flip[6] = true;
+			}
+		} else {
+			a = -1;
+		}
+	}
+
+	for (var a = j + 1; a < boardSize; a++) {
+		if (i + (j - a) >= 0 && board[i + (j - a)][a].state != 'tile') {
+			if (board[i + (j - a)][a].state != currentPlayer) {
+				check[7].push(board[i + (j - a)][a]);
+			} else {
+				a = boardSize;
+				flip[7] = true;
+			}
+		} else {
+			a = boardSize;
+		}
+	}
+
+	for (var a = 0; a < 8; a++) {
 		if (flip[a] == true) {
 			for (var g = 0; g < check[a].length; g++) {
 				check[a][g].flip('x');
@@ -208,9 +258,10 @@ function generateBoard(dim) {
 	}
 }
 
-/*
+//Actual code
+generateBoard(boardSize);
+
 board[3][3] = new Counter(board[3][3].x, board[3][3].y, 'black');
 board[3][4] = new Counter(board[3][4].x, board[3][4].y, 'white');
 board[4][4] = new Counter(board[4][4].x, board[4][4].y, 'black');
 board[4][3] = new Counter(board[4][3].x, board[4][3].y, 'white');
-*/
