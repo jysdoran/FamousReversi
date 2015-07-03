@@ -18,8 +18,8 @@ var scene = FamousEngine.createScene();
 var boardNode = scene.addChild();
 
 //Global 'tweak' variables
-var period = 4000;
-var size = 30;
+var period = 1000;
+var size = 40;
 var buffer = 4;
 var boardPosition = 200;
 var boardSize = 8;
@@ -56,12 +56,8 @@ function Counter(x, y, state) {
 };
 
 Counter.prototype.onUpdate = function onUpdate(time) {
-	this.currentXRotation = this.xrotationpos.get();
-	this.currentYRotation = this.yrotationpos.get();
-	if (Math.floor(time) % period < 20) {
-    	this.flip('y');
-    }
-
+	this.currentXRotation = this.xrotationpos.get() % 6.28;
+	this.currentYRotation = this.yrotationpos.get() % 6.28;
 
 	if (this.lastXRotation % 3.14 < 1.57 && this.currentXRotation % 3.14 > 1.57) {
 		this.toggle();
@@ -84,6 +80,7 @@ Counter.prototype.flip = function (axis) {
 	} else {
 		console.log('Invalid Axis');
 	}
+	console.log('Flip!');
 }
 
 Counter.prototype.toggle = function () {
@@ -104,10 +101,11 @@ function Tile(i,j) {
 	this.y = boardPosition + (size + 2 * buffer) * j;
 	this.i = i;
 	this.j = j;
+	this.state = 'tile';
 
 	this.node.setSizeMode('absolute', 'absolute', 'absolute')
 		.setAbsoluteSize(size + buffer, size + buffer, size + buffer)
-		.setPosition(this.x, this.y)
+		.setPosition(this.x, this.y, -size)
 		.setMountPoint(0.5, 0.5, 0.5)
 		.setOrigin(0.5, 0.5, 0.5)
 
@@ -122,6 +120,76 @@ function placeCounter (e) {
 	var i = e.node.i;
 	var j = e.node.j;
 	board[i][j] = new Counter(board[i][j].x, board[i][j].y, currentPlayer);
+	console.log(i);
+
+	var check = [[]];
+	var flip = []
+
+	for (var a = 0; a < 4; a++) {
+		check[a] = [];
+		flip[a] = false;
+	}
+
+	for (var a = i - 1; a >= 0; a--) {
+		if (board[a][j].state != 'tile') {
+			if (board[a][j].state != currentPlayer) {
+				check[0].push(board[a][j]);
+			} else {
+				a = -1;
+				flip[0] = true;
+			}
+		} else {
+			a = -1;
+		}
+	}
+
+	for (var a = i + 1; a < boardSize; a++) {
+		if (board[a][j].state != 'tile') {
+			if (board[a][j].state != currentPlayer) {
+				check[1].push(board[a][j]);
+			} else {
+				a = boardSize;
+				flip[1] = true;
+			}
+		} else {
+			a = boardSize;
+		}
+	}
+	
+	for (var a = j - 1; a >= 0; a--) {
+		if (board[i][a].state != 'tile') {
+			if (board[i][a].state != currentPlayer) {
+				check[2].push(board[i][a]);
+			} else {
+				a = -1;
+				flip[2] = true;
+			}
+		} else {
+			a = -1;
+		}
+	}
+
+	for (var a = j + 1; a < boardSize; a++) {
+		if (board[i][a].state != 'tile') {
+			if (board[i][a].state != currentPlayer) {
+				check[3].push(board[i][a]);
+			} else {
+				a = boardSize;
+				flip[3] = true;
+			}
+		} else {
+			a = boardSize;
+		}
+	}
+
+	for (var a = 0; a < 4; a++) {
+		if (flip[a] == true) {
+			for (var g = 0; g < check[a].length; g++) {
+				check[a][g].flip('x');
+			}
+		}
+	}
+
 	if (currentPlayer == 'black') {
     	currentPlayer = 'white';
     } else {
@@ -139,7 +207,6 @@ function generateBoard(dim) {
     	}
 	}
 }
-
 
 /*
 board[3][3] = new Counter(board[3][3].x, board[3][3].y, 'black');
