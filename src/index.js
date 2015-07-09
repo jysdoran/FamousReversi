@@ -23,7 +23,7 @@ var size = 40;
 var buffer = 4;
 var boardPosition = 200;
 var boardSize = 8;
-var easingcurve = 'outBounce'
+var easingcurve = 'spring'
 
 
 var currentPlayer = 'black';
@@ -32,7 +32,9 @@ var board = [[]];
 function Counter(x, y, state) {
 	this.node = scene.addChild();
 	this.id = this.node.addComponent(this);
-	
+	this.x = x;
+	this.y = y;
+
 	this.xrotationpos = new Transitionable(0);
 	this.lastXRotation = 0;
 	this.currentXRotation = 0;
@@ -47,21 +49,41 @@ function Counter(x, y, state) {
 
 	this.node.setSizeMode('absolute', 'absolute', 'absolute')
 		.setAbsoluteSize(size, size, size)
-		.setPosition(x, y)
+		.setPosition(this.x, this.y)
 		.setMountPoint(0.5, 0.5, 0.5)
 		.setOrigin(0.5, 0.5, 0.5);
 
 	this.node.requestUpdate(this.id);
 
+	console.log('Counter Created! ^^^^^^^^^^^^^');
 };
 
 Counter.prototype.onUpdate = function onUpdate(time) {
-	this.currentXRotation = this.xrotationpos.get() % 6.28;
-	this.currentYRotation = this.yrotationpos.get() % 6.28;
+	this.currentXRotation = this.xrotationpos.get()
+	this.currentYRotation = this.yrotationpos.get()
+
+	if (this.currentXRotation == 6.28) {
+		this.xrotationpos.set(0);
+		this.currentXRotation = 0;
+		this.lastXRotation = 0;
+	} else if (this.currentXRotation == 3.14) {
+		this.lastXRotation = 3.14;
+	} 
+	if (this.currentYRotation == 6.28) {
+		this.yrotationpos.set(0);
+		this.currentYRotation = 0;
+		this.lastYRotation = 0;
+	} else if (this.currentYRotation == 3.14) {
+		this.lastYRotation = 3.14;
+	}
 
 	if (this.lastXRotation % 3.14 < 1.57 && this.currentXRotation % 3.14 > 1.57) {
 		this.toggle();
 	} else if (this.lastYRotation % 3.14 < 1.57 && this.currentYRotation % 3.14 > 1.57) {
+		this.toggle();
+	} else if (this.lastXRotation % 3.14 > 1.57 && this.currentXRotation % 3.14 < 1.57) {
+		this.toggle();
+	} else if (this.lastYRotation % 3.14 > 1.57 && this.currentYRotation % 3.14 < 1.57) {
 		this.toggle();
 	}
 	
@@ -116,8 +138,11 @@ function Tile(i,j) {
 }
 
 function placeCounter (e) {
+
 	var i = e.node.i;
 	var j = e.node.j;
+	console.log('Placing counter '+ i +', '+ j +'! vvvvvvvvvvvv');
+
 	board[i][j] = new Counter(board[i][j].x, board[i][j].y, currentPlayer);
 
 	var check = [[]];
@@ -128,7 +153,7 @@ function placeCounter (e) {
 		flip[a] = false;
 	}
 
-	for (var a = i - 1; a >= 0; a--) {
+	for (var a = i - 1; a >= 0; a--) { //Left
 		if (board[a][j].state != 'tile') {
 			if (board[a][j].state != currentPlayer) {
 				check[0].push(board[a][j]);
@@ -141,7 +166,7 @@ function placeCounter (e) {
 		}
 	}
 
-	for (var a = i + 1; a < boardSize; a++) {
+	for (var a = i + 1; a < boardSize; a++) { //Right
 		if (board[a][j].state != 'tile') {
 			if (board[a][j].state != currentPlayer) {
 				check[1].push(board[a][j]);
@@ -154,7 +179,7 @@ function placeCounter (e) {
 		}
 	}
 	
-	for (var a = j - 1; a >= 0; a--) {
+	for (var a = j - 1; a >= 0; a--) { //Up
 		if (board[i][a].state != 'tile') {
 			if (board[i][a].state != currentPlayer) {
 				check[2].push(board[i][a]);
@@ -167,7 +192,7 @@ function placeCounter (e) {
 		}
 	}
 
-	for (var a = j + 1; a < boardSize; a++) {
+	for (var a = j + 1; a < boardSize; a++) { //Down
 		if (board[i][a].state != 'tile') {
 			if (board[i][a].state != currentPlayer) {
 				check[3].push(board[i][a]);
@@ -180,7 +205,7 @@ function placeCounter (e) {
 		}
 	}
 
-	for (var a = i - 1; a >= 0; a--) {
+	for (var a = i - 1; a >= 0; a--) { //UpLeft
 		if (j - (i - a) >= 0 && board[a][j - (i - a)].state != 'tile') {
 			if (board[a][j - (i - a)].state != currentPlayer) {
 				check[4].push(board[a][j - (i - a)]);
@@ -193,7 +218,7 @@ function placeCounter (e) {
 		}
 	}
 
-	for (var a = i + 1; a < boardSize; a++) {
+	for (var a = i + 1; a < boardSize; a++) { //DownRight
 		if (j - (i - a) < boardSize && board[a][j - (i - a)].state != 'tile') {
 			if (board[a][j - (i - a)].state != currentPlayer) {
 				check[5].push(board[a][j - (i - a)]);
@@ -206,7 +231,7 @@ function placeCounter (e) {
 		}
 	}
 
-	for (var a = j - 1; a >= 0; a--) {
+	for (var a = j - 1; a >= 0; a--) { //UpRight
 		if (i + (j - a) < boardSize && board[i + (j - a)][a].state != 'tile') {
 			if (board[i + (j - a)][a].state != currentPlayer) {
 				check[6].push(board[i + (j - a)][a]);
@@ -219,7 +244,7 @@ function placeCounter (e) {
 		}
 	}
 
-	for (var a = j + 1; a < boardSize; a++) {
+	for (var a = j + 1; a < boardSize; a++) //DownLeft{
 		if (i + (j - a) >= 0 && board[i + (j - a)][a].state != 'tile') {
 			if (board[i + (j - a)][a].state != currentPlayer) {
 				check[7].push(board[i + (j - a)][a]);
@@ -235,11 +260,7 @@ function placeCounter (e) {
 	for (var a = 0; a < 8; a++) {
 		if (flip[a] == true) {
 			for (var g = 0; g < check[a].length; g++) {
-				//if(a - 2 < 0) {
-					check[a][g].flip('x');
-				//} else {
-				//	check[a][g].flip('y');
-				//}
+				check[a][g].flip('x');
 			}
 		}
 	}
@@ -269,3 +290,4 @@ board[3][3] = new Counter(board[3][3].x, board[3][3].y, 'black');
 board[3][4] = new Counter(board[3][4].x, board[3][4].y, 'white');
 board[4][4] = new Counter(board[4][4].x, board[4][4].y, 'black');
 board[4][3] = new Counter(board[4][3].x, board[4][3].y, 'white');
+console.log('Ready! -----------------------------------------------')
