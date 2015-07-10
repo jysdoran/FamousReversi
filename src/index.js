@@ -23,7 +23,7 @@ var size = 40;
 var buffer = 4;
 var boardPosition = 200;
 var boardSize = 8;
-var easingcurve = 'spring'
+var easingcurve = 'outBounce'
 
 
 var currentPlayer = 'black';
@@ -62,28 +62,33 @@ Counter.prototype.onUpdate = function onUpdate(time) {
 	this.currentXRotation = this.xrotationpos.get()
 	this.currentYRotation = this.yrotationpos.get()
 
-	if (this.currentXRotation == 6.28) {
+	if (Math.abs(this.currentXRotation) == 6.28) {
 		this.xrotationpos.set(0);
 		this.currentXRotation = 0;
 		this.lastXRotation = 0;
-	} else if (this.currentXRotation == 3.14) {
-		this.lastXRotation = 3.14;
-	} 
-	if (this.currentYRotation == 6.28) {
+	} else if (Math.abs(this.currentXRotation) == 3.14) {
+		this.lastXRotation = this.currentXRotation;
+	}
+	if (Math.abs(this.currentYRotation) == 6.28) {
 		this.yrotationpos.set(0);
 		this.currentYRotation = 0;
 		this.lastYRotation = 0;
-	} else if (this.currentYRotation == 3.14) {
-		this.lastYRotation = 3.14;
+	} else if (Math.abs(this.currentYRotation) == 3.14) {
+		this.lastYRotation = this.currentYRotation;
 	}
 
-	if (this.lastXRotation % 3.14 < 1.57 && this.currentXRotation % 3.14 > 1.57) {
+	//Horrible and dirty check for flipping over the counter
+	if (Math.abs(this.lastXRotation) != 3.14 &&
+			((this.lastXRotation % 3.14 < 1.57 && this.currentXRotation % 3.14 > 1.57) || 
+			(this.lastXRotation % 3.14 > 1.57 && this.currentXRotation % 3.14 < 1.57) ||
+			(this.lastXRotation % 3.14 > -1.57 && this.currentXRotation % 3.14 < -1.57) ||
+			(this.lastXRotation % 3.14 < -1.57 && this.currentXRotation % 3.14 > -1.57))) {
 		this.toggle();
-	} else if (this.lastYRotation % 3.14 < 1.57 && this.currentYRotation % 3.14 > 1.57) {
-		this.toggle();
-	} else if (this.lastXRotation % 3.14 > 1.57 && this.currentXRotation % 3.14 < 1.57) {
-		this.toggle();
-	} else if (this.lastYRotation % 3.14 > 1.57 && this.currentYRotation % 3.14 < 1.57) {
+	} else if (Math.abs(this.lastYRotation) != 3.14 && 
+			((this.lastYRotation % 3.14 < 1.57 && this.currentYRotation % 3.14 > 1.57) ||
+			(this.lastYRotation % 3.14 > 1.57 && this.currentYRotation % 3.14 < 1.57) ||
+			(this.lastYRotation % 3.14 > -1.57 && this.currentYRotation % 3.14 < -1.57) ||
+			(this.lastYRotation % 3.14 < -1.57 && this.currentYRotation % 3.14 > -1.57))) {
 		this.toggle();
 	}
 	
@@ -94,17 +99,68 @@ Counter.prototype.onUpdate = function onUpdate(time) {
 };
 
 Counter.prototype.flip = function (axis) {
-	if (axis == 'x') {
-		this.xrotationpos.set(this.currentXRotation + 3.14, { duration: period, curve: easingcurve });
-	} else if (axis == 'y'){
-		this.yrotationpos.set(this.currentYRotation + 3.14, { duration: period, curve: easingcurve });
-	} else {
-		console.log('Invalid Axis');
+	var xflip = 1;
+	var yflip = 1;
+
+	switch (axis) {
+		case 0: //Left
+			xflip = 1;
+			yflip = 0;
+		break;
+		case 1: //Right
+			xflip = -1;
+			yflip = 0;
+		break;
+		case 2: //Up
+			xflip = 0;
+			yflip = 1;
+		break;
+		case 3: //Down
+			xflip = 0;
+			yflip = -1;
+		break;
+		case 4: //UpLeft
+			xflip = 1;
+			yflip = 1;
+		break;
+		case 5: //DownRight
+			xflip = -1;
+			yflip = -1;
+		break;
+		case 6: //UpRight
+			xflip = -1;
+			yflip = 1;
+		break;
+		case 7: //DownLeft
+			xflip = 1;
+			yflip = -1;
+		break;
 	}
+
+
+
+	if (Math.abs(this.currentYRotation) == 3.14) {
+		xflip *= -1;
+	}
+	if (Math.abs(this.currentXRotation) == 3.14) {
+		yflip *= -1;
+	}
+
+
+	this.xrotationpos.set(this.currentXRotation + (xflip * 3.14), { duration: period, curve: easingcurve });
+	this.yrotationpos.set(this.currentYRotation + (yflip * 3.14), { duration: period, curve: easingcurve });
+
+	this.lastXRotation = this.currentXRotation;
+	this.lastYRotation = this.currentYRotation;
+
+
 	console.log('Flip!');
 }
 
 Counter.prototype.toggle = function () {
+	console.log("X: "+ this.lastXRotation +", "+ this.currentXRotation);
+	console.log("Y: "+ this.lastYRotation +", "+ this.currentYRotation);
+	
 	if (this.state == 'black') {
     	this.image.setAttribute('src', './images/famous_logo_i.png');
     	this.state = 'white';
@@ -244,7 +300,7 @@ function placeCounter (e) {
 		}
 	}
 
-	for (var a = j + 1; a < boardSize; a++) //DownLeft{
+	for (var a = j + 1; a < boardSize; a++) { //DownLeft
 		if (i + (j - a) >= 0 && board[i + (j - a)][a].state != 'tile') {
 			if (board[i + (j - a)][a].state != currentPlayer) {
 				check[7].push(board[i + (j - a)][a]);
@@ -260,7 +316,7 @@ function placeCounter (e) {
 	for (var a = 0; a < 8; a++) {
 		if (flip[a] == true) {
 			for (var g = 0; g < check[a].length; g++) {
-				check[a][g].flip('x');
+				check[a][g].flip(a);
 			}
 		}
 	}
@@ -281,6 +337,10 @@ function generateBoard(dim) {
     		board[i][j] = new Tile(i, j);
     	}
 	}
+}
+
+function getSign(num) {
+	return num/Math.abs(num);
 }
 
 //Actual code
